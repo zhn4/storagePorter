@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>缓存搬运工</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="brand">
+        <img class="brand-mark" src="icons/icon48.png" alt="" width="38" height="38">
+        <div class="brand-copy">
+          <h1>缓存搬运工</h1>
+          <p>localStorage · sessionStorage</p>
+        </div>
+      </div>
+      <span class="local-badge" title="缓存只保存在本机扩展存储中">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3.2 19 6v5.2c0 4.3-2.8 8.2-7 9.8-4.2-1.6-7-5.5-7-9.8V6l7-2.8Z"/>
+          <path d="m9.3 11.9 1.8 1.8 3.6-3.8"/>
+        </svg>
+        仅本机
+      </span>
+    </header>
+
+    <main class="main">
+      <section class="card site-card" aria-labelledby="siteHeading">
+        <div class="section-heading">
+          <h2 id="siteHeading" class="section-label">
+            <span class="live-dot" aria-hidden="true"></span>
+            当前页面
+          </h2>
+          <span id="accessBadge" class="access-badge is-loading">读取中</span>
+        </div>
+
+        <div class="site-row">
+          <div id="siteAvatar" class="site-avatar" aria-hidden="true">·</div>
+          <div class="site-identity">
+            <p id="siteHost" class="site-host">正在连接标签页…</p>
+            <p id="siteTitle" class="site-title">正在读取当前页面</p>
+          </div>
+        </div>
+
+        <div class="site-stats">
+          <div class="stat-chip" data-kind="local">
+            <span class="stat-dot" aria-hidden="true"></span>
+            <span class="stat-label">localStorage</span>
+            <strong id="localCount" class="stat-value">—</strong>
+          </div>
+          <div class="stat-chip" data-kind="session">
+            <span class="stat-dot" aria-hidden="true"></span>
+            <span class="stat-label">sessionStorage</span>
+            <strong id="sessionCount" class="stat-value">—</strong>
+          </div>
+          <button id="refreshBtn" class="icon-button" type="button" title="重新读取当前页面" aria-label="重新读取当前页面">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 11.2A8 8 0 1 0 18.7 16"/>
+              <path d="M20 4.5v6.7h-6.7"/>
+            </svg>
+          </button>
+        </div>
+
+        <p id="siteNotice" class="site-notice" hidden></p>
+      </section>
+
+      <div class="action-grid">
+        <button id="copyBtn" class="btn btn-primary" type="button" disabled>
+          <span class="btn-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="8.5" y="8.5" width="11" height="11" rx="2.4"/>
+              <path d="M15.5 8.5V7A2.5 2.5 0 0 0 13 4.5H7A2.5 2.5 0 0 0 4.5 7v6A2.5 2.5 0 0 0 7 15.5h1.5"/>
+            </svg>
+          </span>
+          <span class="btn-label">复制缓存数据</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+        <button id="pasteBtn" class="btn btn-secondary" type="button" disabled>
+          <span class="btn-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 5.5h6M9.5 4h5A1.5 1.5 0 0 1 16 5.5v.6h1.5A2.5 2.5 0 0 1 20 8.6v9.9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5V8.6a2.5 2.5 0 0 1 2.5-2.5H8v-.6A1.5 1.5 0 0 1 9.5 4Z"/>
+              <path d="M8.5 13h7M8.5 16.5h4.5"/>
+            </svg>
+          </span>
+          <span class="btn-label">粘贴缓存数据</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <p id="actionHint" class="action-hint">复制会把当前站点缓存暂存到本机，并写入剪贴板。</p>
+
+      <section id="snapshotCard" class="card snapshot-card" aria-labelledby="snapshotHeading" hidden>
+        <div class="snapshot-head">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>暂存区</p>
+            <h2 id="snapshotHeading">上次复制的缓存</h2>
+          </div>
+          <div class="snapshot-meta">
+            <span id="snapshotTime" class="meta-time">—</span>
+            <span id="snapshotSize" class="meta-pill">0 B</span>
+          </div>
+        </div>
+
+        <div class="transfer" aria-label="缓存来源与粘贴目标">
+          <span id="snapshotHost" class="transfer-site">—</span>
+          <svg class="transfer-arrow" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 12h15M14 7l5 5-5 5"/>
+          </svg>
+          <span id="pasteTarget" class="transfer-site is-target">当前页面</span>
+        </div>
+
+        <div class="storage-tabs" role="tablist" aria-label="缓存类型">
+          <button id="localTab" class="storage-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="storageList" tabindex="0">
+            <span class="tab-dot" aria-hidden="true"></span>
+            localStorage
+            <span id="localTabCount" class="tab-count">0</span>
+          </button>
+          <button id="sessionTab" class="storage-tab" type="button" role="tab" aria-selected="false" aria-controls="storageList" tabindex="-1">
+            <span class="tab-dot" aria-hidden="true"></span>
+            sessionStorage
+            <span id="sessionTabCount" class="tab-count">0</span>
+          </button>
+        </div>
+
+        <div id="storageList" class="storage-list" role="tabpanel" aria-labelledby="localTab" tabindex="0"></div>
+
+        <div class="snapshot-footer">
+          <label class="check" title="勾选后会先清空目标页面的 localStorage 与 sessionStorage，再写入缓存">
+            <input id="clearFirst" type="checkbox">
+            <span class="check-box" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m6 12.5 4 4 8-9"/></svg>
+            </span>
+            <span>粘贴前清空目标存储</span>
+          </label>
+          <span class="snapshot-tip">默认只覆盖同名键</span>
+        </div>
+      </section>
+
+      <section id="emptyState" class="card empty-state">
+        <div class="empty-visual" aria-hidden="true">
+          <span class="empty-tray empty-tray-back"></span>
+          <span class="empty-tray empty-tray-front">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 16V5.5M7.8 9.7 12 5.5l4.2 4.2"/>
+              <path d="M5.5 14.5v2.2A2.3 2.3 0 0 0 7.8 19h8.4a2.3 2.3 0 0 0 2.3-2.3v-2.2"/>
+            </svg>
+          </span>
+        </div>
+        <h2>暂存区还是空的</h2>
+        <p>在任意网页点击「复制缓存数据」，localStorage 和 sessionStorage 就会出现在这里。</p>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>数据仅保存在本机，不会上传</span>
+      <span id="versionLabel" class="version">v1.0.0</span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+    <span id="toastIcon" class="toast-icon" aria-hidden="true"></span>
+    <span id="toastText" class="toast-text"></span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

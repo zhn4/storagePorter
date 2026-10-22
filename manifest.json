@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "缓存搬运工 · Storage Porter",
+  "version": "1.0.0",
+  "description": "一键复制当前网站的 localStorage 与 sessionStorage，并粘贴到其他页面。",
+  "minimum_chrome_version": "102",
+  "action": {
+    "default_title": "缓存搬运工",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "unlimitedStorage",
+    "clipboardWrite"
+  ]
+}
